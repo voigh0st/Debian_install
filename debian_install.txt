@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Update and upgrade system
+sudo apt update && sudo apt upgrade -y
+
+# Add non-free and contrib repositories for proprietary drivers
+sudo tee /etc/apt/sources.list <<EOF
+deb http://deb.debian.org/debian/ $(lsb_release -sc) main contrib non-free
+deb-src http://deb.debian.org/debian/ $(lsb_release -sc) main contrib non-free
+deb http://deb.debian.org/debian/ $(lsb_release -sc)-updates main contrib non-free
+deb-src http://deb.debian.org/debian/ $(lsb_release -sc)-updates main contrib non-free
+EOF
+
+sudo apt update
+
+# Install necessary packages in one line (KDE Plasma, NVIDIA drivers, Steam, Wine, Lutris, Gamemode, Brave, Ungoogled Chromium, KeePassXC, Joplin, Strawberry, UFW, Fail2ban)
+sudo apt install -y kde-plasma-desktop sddm nvidia-driver firmware-misc-nonfree steam wine wine32 libwine libwine:i386 fonts-wine lutris gamemode brave-browser ungoogled-chromium keepassxc curl ufw fail2ban joplin strawberry mtp-tools jmtpfs xboxdrv
+
+# Enable services
+sudo systemctl enable sddm
+sudo systemctl enable xboxdrv.service
+sudo systemctl start xboxdrv.service
+sudo systemctl enable ufw
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+sudo ufw enable
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow 8080/tcp
+
+# System Hardening with CIS Benchmark Scripts
+git clone https://github.com/ovh/debian-cis.git && cd debian-cis
+sudo cp debian/default /etc/default/cis-hardening
+sudo ./bin/hardening.sh --audit && sudo ./bin/hardening.sh --apply
+
+# Optional: AppArmor for Additional Application Hardening
+sudo apt install -y apparmor apparmor-profiles apparmor-utils
+sudo systemctl enable apparmor
+sudo systemctl start apparmor
+sudo aa-enforce /etc/apparmor.d/*
+
+# Final Reboot
+echo "Setup complete! Reboot your system to finalize all changes."
