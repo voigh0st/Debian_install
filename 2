@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Add i386 architecture for Wine and 32-bit libraries
+sudo dpkg --add-architecture i386
+sudo apt update
+
+# Enable contrib and non-free repositories
+sudo add-apt-repository contrib
+sudo add-apt-repository non-free
+sudo add-apt-repository non-free-firmware
+sudo apt update
+
+# Install essential gaming packages and drivers
+sudo apt install -y nvidia-driver nvidia-settings lutris gamemode
+
+# Fix Steam issues by using Flatpak for compatibility
+sudo apt install -y flatpak
+flatpak install flathub com.valvesoftware.Steam -y
+
+# Install Wine from official repositories with 32-bit support
+sudo apt install -y wine wine64 libwine fonts-wine
+
+# Install Brave browser
+sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+sudo apt update
+sudo apt install brave-browser
+
+# Install Joplin
+wget -O - https://raw.githubusercontent.com/laurent22/joplin/dev/Joplin_install_and_update.sh | bash
+
+# Install Xbox controller driver and enable service
+sudo apt install -y xboxdrv
+sudo systemctl enable xboxdrv
+sudo systemctl start xboxdrv
+
+# Install and enable Fail2ban for security (skipping UFW due to issues)
+sudo apt install -y fail2ban
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# Install AppArmor profiles and activate enforcement
+sudo apt install -y apparmor apparmor-profiles-extra
+sudo systemctl enable apparmor
+sudo systemctl start apparmor
+
+# Install privacy-respecting music player (Lollypop)
+sudo apt install -y lollypop
+
+# Install KeePassXC for password management
+sudo apt install -y keepassxc
+
+# Install Git for version control
+sudo apt install -y git
+
+# Clean up system
+sudo apt autoremove -y
+
+# Final reboot prompt for changes to take effect
+echo "Setup complete! Please reboot your system for all changes to take effect."
