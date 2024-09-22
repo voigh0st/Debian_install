@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Enable i386 architecture for Wine and gaming dependencies
+sudo dpkg --add-architecture i386
+sudo apt update && sudo apt upgrade -y
+
+# Add Brave Browser's public key and repository
+sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+
+# Add ungoogled-chromium repository and other key software
+sudo add-apt-repository ppa:ungoogled-chromium/ppa
+sudo apt update
+
+# Install all necessary packages in one go
+sudo apt install brave-browser ungoogled-chromium joplin nvidia-driver nvidia-xconfig nvidia-settings steam lutris wine64 wine32 libwine fonts-wine winetricks ufw xboxdrv apparmor fail2ban curl -y
+
+# Setup NVIDIA configurations
+sudo nvidia-xconfig
+
+# Enable UFW, Xboxdrv, and NVIDIA services
+sudo systemctl enable ufw
+sudo systemctl enable xboxdrv
+sudo systemctl enable nvidia-persistenced
+
+# Start UFW service and configure default rules
+sudo ufw enable
+sudo ufw allow ssh
+sudo ufw allow 27015/tcp  # For gaming ports (adjust as needed for games like WoW)
+sudo ufw allow 3724/tcp
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# Enable AppArmor for additional security
+sudo systemctl enable apparmor
+sudo systemctl start apparmor
+
+# Hardening with CIS Benchmarks
+cd /path/to/debian-cis/
+sudo ./hardening.sh --apply all
+
+# Finishing touches
+sudo apt update && sudo apt upgrade -y
+
+echo "System setup complete. Please reboot your system to apply all changes."
