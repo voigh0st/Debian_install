@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Enable i386 architecture
+sudo dpkg --add-architecture i386
+sudo apt update
+
+# Fix GPG key issues for Brave
+sudo apt install apt-transport-https curl gnupg -y
+sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+sudo apt update
+sudo apt install brave-browser -y
+
+# Ungoogled Chromium repo (if needed, otherwise remove)
+sudo curl -fsSL https://dl.uncg.edu/etc/ungoogled_chromium.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/ungoogled-chromium.gpg
+echo "deb https://ungoogled-software.github.io/ungoogled-chromium-debian focal main" | sudo tee /etc/apt/sources.list.d/ungoogled-chromium.list
+sudo apt update
+sudo apt install ungoogled-chromium -y
+
+# Install essential gaming packages
+sudo apt install wine wine64 wine32 libwine libwine:i386 fonts-wine lutris steam -y
+
+# NVIDIA drivers
+sudo apt install nvidia-driver nvidia-settings nvidia-xconfig -y
+sudo nvidia-xconfig
+
+# Install AppArmor and hardening scripts
+sudo apt install apparmor apparmor-profiles apparmor-utils -y
+sudo systemctl enable apparmor
+
+# UFW installation and configuration (if still missing)
+sudo apt install ufw -y
+sudo systemctl enable ufw
+sudo ufw enable
+
+# Install Xbox controller driver
+sudo apt install xboxdrv -y
+sudo systemctl enable xboxdrv
+
+# Other recommended software installations
+sudo apt install keepassxc joplin -y
+
+# Cleanup and final updates
+sudo apt update && sudo apt upgrade -y
+
+# Reboot to finalize setup
+sudo reboot
