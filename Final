@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Step 1: Update and enable repositories
+sudo apt update && sudo apt upgrade -y
+sudo dpkg --add-architecture i386
+
+# Fix Brave GPG key issue (add it manually)
+sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" | sudo tee /etc/apt/sources.list.d/brave-browser-release.list
+
+# Add other required repositories
+sudo add-apt-repository ppa:lutris-team/lutris -y
+sudo apt-add-repository non-free && sudo apt-add-repository contrib
+sudo apt update
+
+# Step 2: Install necessary packages
+sudo apt install -y \
+    wine64 wine32 libwine libwine:i386 fonts-wine \
+    lutris steam \
+    brave-browser \
+    ungoogled-chromium \
+    joplin \
+    keepassxc \
+    openjdk-11-jre \
+    nvidia-driver firmware-misc-nonfree \
+    gamemode \
+    ufw \
+    apparmor apparmor-utils \
+    fail2ban 
+
+# Step 3: Setup and enable NVIDIA drivers
+sudo apt install -y nvidia-driver nvidia-prime nvidia-cuda-toolkit
+sudo nvidia-xconfig
+
+# Step 4: Install and set up firewall and AppArmor
+sudo ufw enable
+sudo systemctl enable ufw
+sudo systemctl enable apparmor
+sudo systemctl start apparmor
+sudo systemctl start ufw
+
+# Step 5: Install hardening tools
+cd /path/to/ && sudo ./hardening.sh
+
+# Step 6: Reboot system after setup
+echo "Setup complete. Rebooting now..."
+sudo reboot
