@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Ensure root access
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root or with sudo." 
+   exit 1
+fi
+
+# Fix permission issues with dpkg and apt locks
+rm -f /var/lib/dpkg/lock-frontend
+rm -f /var/lib/dpkg/lock
+rm -f /var/cache/apt/archives/lock
+dpkg --configure -a
+apt update
+
+# Add i386 architecture for Steam and Wine
+dpkg --add-architecture i386
+apt update
+
+# Fix Brave i386 issue by modifying the source list
+cat <<EOF > /etc/apt/sources.list.d/brave-browser-release.list
+deb [arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main
+EOF
+
+# Reinstall key repositories
+apt update
+
+# Install essential packages
+apt install -y \
+  sudo wget curl git build-essential linux-headers-$(uname -r) \
+  nvidia-driver nvidia-cuda-toolkit nvidia-xconfig \
+  apparmor apparmor-utils fail2ban ufw xboxdrv \
+  wine64 wine32 libwine:i386 fonts-wine steam \
+  brave-browser ungoogled-chromium keepassxc joplin \
+  lutris gamemode openjdk-11-jre
+
+# Ensure all required services are enabled and started
+systemctl enable ufw fail2ban xboxdrv nvidia-persistenced
+systemctl start ufw fail2ban xboxdrv nvidia-persistenced
+
+# Configure firewall (ufw)
+ufw enable
+ufw allow 22/tcp  # SSH
+ufw allow 80/tcp  # HTTP
+ufw allow 443/tcp # HTTPS
+
+# AppArmor: enforce security policies
+systemctl enable apparmor
+systemctl start apparmor
+aa-enforce /etc/apparmor.d/*
+
+# Setup Nvidia optimus if required (avoiding Intel GPU)
+nvidia-xconfig --prime
+
+# Final system upgrade and reboot prompt
+apt upgrade -y
+echo "Setup complete. You should now reboot your system to finalize all changes."
